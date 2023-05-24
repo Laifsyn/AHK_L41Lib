@@ -54,7 +54,7 @@ ReadModLists() {
         }
 
     file := FileOpen(path "\modlist.list", 0x1, A_FileEncoding)
-    file.Write(Format("[{}]`r`n{}", FormatTime(A_Now, "yyyy/MM/dd hh:mm"), text))
+    file.Write(Format("{2}", FormatTime(A_Now, "yyyy/MM/dd hh:mm"), text))
     file.Length := file.Pos
 }
 ^r:: Reload
