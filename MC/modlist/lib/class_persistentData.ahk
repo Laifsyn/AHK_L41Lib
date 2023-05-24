@@ -17,14 +17,18 @@ Class persistentData extends thisFile {
 
     __Init() {
         super.__Init()
-        this.store := Map("path", A_ScriptDir "\config")
         this.ext := "json"
         this.data := Map()
-        this.storeFileName := "persistentData." this.ext
-        this.__isCreated(this.fileFullPath := (this.store["path"] "\" this.storeFileName))
-        this.Load()
+        this.store := Map("path", A_ScriptDir "\config")
+        this.store["fileName"] := "persistentData." this.ext
+        this.DefineProp("fileFullPath", {get:(this)=>(this.store["path"] "\" this.store["fileName"])})
     }
 
+    __New() {
+        this.__isCreated(this.fileFullPath)
+        this.Load()
+        return this
+    }
     Load() {
         Try
             map := JXON.Load(this.__Read())
@@ -45,7 +49,7 @@ Class persistentData extends thisFile {
         }
         this.__MergeMap(this.data, map)
     }
-    __Read() => FileRead(this.store["path"] "\" this.storeFileName, this.encoding)
+    __Read() => FileRead(this.store["path"] "\" this.store["fileName"], this.encoding)
     __isCreated(path, shouldCreate := 1) {
         if !(exists := FileExist(path)) && shouldCreate
             this.__FileAppend("{}", path, this.encoding)
@@ -60,7 +64,7 @@ Class persistentData extends thisFile {
     Dump() {
         fileObj := FileOpen(this.fileFullPath, 0x3, this.encoding)
         openPos := fileObj.Pos
-        map := JXON.Load(fileObj.__Read()), fileObj.Pos := openPos
+        map := JXON.Load(fileObj.Read()), fileObj.Pos := openPos
         map := this.__MergeMap(map, this.data)
         map.set("timestamp", A_Now)
         fileObj.Write(JXON.Dump(map, 2))
@@ -75,16 +79,22 @@ Class persistentData extends thisFile {
         }
         return what
     }
-    OpenFilePath(path) {
+    OpenFilePath() {
         run(this.store["path"])
+    }
+    fileFullPath2{
+        get => (this.store["path"] "\" this.store["fileName"])
     }
 }
 
-class tempData extends persistentData {
+class C_tempData extends persistentData {
 
-    store := Map("path", A_Temp "\AutoHotkey\config")
+    __Init() {
+        super.__Init()
+        this.store.set("path", A_Temp "\AutoHotkey\config")
+    }
 
 }
-class storedData extends persistentData {
+class C_storedData extends persistentData {
 
 }
