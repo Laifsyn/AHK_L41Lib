@@ -23,15 +23,35 @@ exit
 
 ReadModLists() {
     global tempData, storedData
-    text := ""
     other := []
+    max := 0
+    maxSize := 0
+    getSize := () => A_LoopFileSizeKB < 10000 ? A_LoopFileSizeKB "KB": Round(A_LoopFileSizeMB + Mod(A_LoopFileSizeKB,1000)/1000,2 ) "MB"
     loop files tempData.data["ModsPath"] "\*"
     {
+        size := getSize()
         SplitPath(A_LoopFileName, , , &ext, &name)
+        if ext != "jar"
+            name := name "." ext
+        Max := StrLen(name) < max ? Max : StrLen(name)
+        maxSize := StrLen(size) < maxSize ? maxSize : StrLen(size)
+    }
+    col1 := "ModName", col2 := "Size", col3 := "lastModified"
+    Head := col1 stringJoin(" ", max - StrLen(col1) + 2) col2 stringJoin(" ", maxSize - StrLen(col2) + 4) col3
+    Text := ""
+    loop files tempData.data["ModsPath"] "\*"
+    {
+        size := getSize()
+        extraData := Format(" [{}]{}{}hrs.", size, stringJoin(" ", maxSize - StrLen(size) + 2), FormatTime(A_LoopFileTimeModified, "MMMM dd hh:mm"))
+
+        SplitPath(A_LoopFileName, , , &ext, &name)
+        if ext != "jar"
+            name := name "." ext
+        extraData := stringJoin(" ", max - StrLen(name) + 1) extraData
         if ext = "jar"
-            text .= name "`r`n"
+            text .= name extraData "`r`n"
         else
-            other.push(Format("{}.{}`r`n", name, ext))
+            other.push(Format("{}`r`n", name extraData))
     }
     text := Trim(text, "`r`n")
     text := Sort(text)
@@ -39,10 +59,9 @@ ReadModLists() {
     for v in other
         temp .= v "`r`n"
     if temp != ""
-        temp:=Sort(temp)
+        temp := Sort(temp)
     text := Trim(text temp, "`r`n")
-
-    SetListVars(Enumerate(text))
+    text := Head "`r`n" text
     path := storedData.data["modlistPath"]
     while 1
         if !FileExist(path)
@@ -53,6 +72,7 @@ ReadModLists() {
             break
         }
 
+    SetListVars(path "\modlist.list`r`n" Enumerate(text))
     file := FileOpen(path "\modlist.list", 0x1, A_FileEncoding)
     file.Write(Format("{2}", FormatTime(A_Now, "yyyy/MM/dd hh:mm"), text))
     file.Length := file.Pos
