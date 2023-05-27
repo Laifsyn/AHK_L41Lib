@@ -171,7 +171,7 @@
 	Static Dump(obj, indent:="", lvl:=1) {
 		if IsObject(obj) {
 			If !(obj is Array || obj is Map || obj is String || obj is Number)
-				throw Error("Object type not supported.", -1, Format("<Object at 0x{:p}>", ObjPtr(obj)))
+				throw Error("Object type not supported.", -1, Format("<Object at 0x{:p}>", ObjPtr(obj) ", " Type(obj)))
 			
 			if IsInteger(indent)
 			{

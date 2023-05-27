@@ -14,20 +14,44 @@ Class thisFile extends Map {
 }
 
 Class persistentData extends thisFile {
-
-    __Init() {
-        super.__Init()
+    __New(namespace := "_default", syncOnChange := False) {
+        this.sync := syncOnChange
+        this.namespace := namespace
         this.ext := "json"
-        this.data := Map()
         this.store := Map("path", A_ScriptDir "\config")
-        this.store["fileName"] := "persistentData." this.ext
-        this.DefineProp("fileFullPath", {get:(this)=>(this.store["path"] "\" this.store["fileName"])})
-    }
-
-    __New() {
+        this.store["fileName"] := Format("persistentData{}.{}", this.namespace = "" ? "" : this.namespace, this.ext)
+        this.DefineProp("fileFullPath", { get: (this) => (this.store["path"] "\" this.store["fileName"]) })
         this.__isCreated(this.fileFullPath)
         this.Load()
         return this
+    }
+    _data := Map()
+    data[key?, prop := "value", skipSync := False] {
+        set {
+            if !IsSet(key)
+                throw ValueError(Format("{}.data[{}].{}?", Type(this), "unset", prop), , "Key is Unset")
+            if !this._data.has(key)
+                this._data[key] := Object()
+                .DefineProp("value", { value: Value })
+                .DefineProp("sync", { get: (envObj) => this.sync })
+            else
+                this._data[key].DefineProp(prop, { value: Value })
+            if skipSync
+                return
+            if this._data[key].sync
+                this.Dump()
+        }
+        get {
+
+            if !IsSet(key)
+                return this._data
+            if key = "ModsPath"
+            if !this._data.has(key)
+                this.data[key] := ""
+            if !this._data[key].HasProp(prop)
+                throw ValueError(Format("{}.data[{}].{} has no such property.", Type(this), key, prop), , prop)
+            return this._data[key].%prop%
+        }
     }
     Load() {
         Try
@@ -47,7 +71,8 @@ Class persistentData extends thisFile {
             this.Load()
             return
         }
-        this.__MergeMap(this.data, map)
+        for k,v in map
+            this.data[k]:=v
     }
     __Read() => FileRead(this.store["path"] "\" this.store["fileName"], this.encoding)
     __isCreated(path, shouldCreate := 1) {
@@ -73,6 +98,8 @@ Class persistentData extends thisFile {
     __MergeMap(what, withWhat) {
         for k, v in withWhat
         {
+            if v.HasProp("value")
+                v := v.value
             if (v is Object)
                 v := Format("[{}]{}", ObjPtr(v), Type(v))
             what[k] := v
@@ -82,15 +109,15 @@ Class persistentData extends thisFile {
     OpenFilePath() {
         run(this.store["path"])
     }
-    fileFullPath2{
+    fileFullPath {
         get => (this.store["path"] "\" this.store["fileName"])
     }
 }
 
 class C_tempData extends persistentData {
 
-    __Init() {
-        super.__Init()
+    __New(params*) {
+        super.__New(params*)
         this.store.set("path", A_Temp "\AutoHotkey\config")
     }
 

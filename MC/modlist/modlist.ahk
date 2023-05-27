@@ -2,32 +2,30 @@
 SetWorkingDir(A_ScriptDir)
 #include <UDF>
 G := myGlobal()
-tempData := C_tempData()
 storedData := C_storedData()
-
-last := tempData.data.Has("ModsPath") ? tempData.data["ModsPath"] : ""
+last := storedData.data.Has("ModsPath") ? storedData.data["ModsPath"] : ""
 while 1 {
     obj := InputBox("Insert Minecraft mods File Path.", G.name, , last)
     if obj.result = "cancel"
         break
     if !FileExist(last := obj.value)
         continue
-    if (Obj.value = tempData.data["ModsPath"])
+    if (Obj.value = storedData.data["ModsPath"])
         break
-    tempData.data["ModsPath"] := obj.value
-    tempData.Dump()
-    MsgBox(tempData.data["ModsPath"])
+    storedData.data["ModsPath"] := obj.value
+    storedData.Dump()
+    MsgBox(storedData.data["ModsPath"])
     break
 }
 exit
 
 ReadModLists() {
-    global tempData, storedData
+    global storedData
     other := []
     max := 0
     maxSize := 0
     getSize := () => A_LoopFileSizeKB < 10000 ? A_LoopFileSizeKB "KB": Round(A_LoopFileSizeMB + Mod(A_LoopFileSizeKB,1000)/1000,2 ) "MB"
-    loop files tempData.data["ModsPath"] "\*"
+    loop files storedData.data["ModsPath"] "\*"
     {
         size := getSize()
         SplitPath(A_LoopFileName, , , &ext, &name)
@@ -39,7 +37,7 @@ ReadModLists() {
     col1 := "ModName", col2 := "Size", col3 := "lastModified"
     Head := col1 stringJoin(" ", max - StrLen(col1) + 2) col2 stringJoin(" ", maxSize - StrLen(col2) + 4) col3
     Text := ""
-    loop files tempData.data["ModsPath"] "\*"
+    loop files storedData.data["ModsPath"] "\*"
     {
         size := getSize()
         extraData := Format(" [{}]{}{}hrs.", size, stringJoin(" ", maxSize - StrLen(size) + 2), FormatTime(A_LoopFileTimeModified, "MMMM dd hh:mm"))
@@ -65,7 +63,7 @@ ReadModLists() {
     path := storedData.data["modlistPath"]
     while 1
         if !FileExist(path)
-            path := InputBox("Input the path where to store the modlist").value
+            path := InputBox("Input the path where to store the modlist",,,A_ScriptDir "\modlist.list").value
         else
         {
             storedData.data["modlistPath"] := path, storedData.Dump()
@@ -79,7 +77,7 @@ ReadModLists() {
 }
 ^r:: Reload
 ^!1:: ReadModLists()
-!^esc:: tempData.OpenFilePath()
+!^esc:: storedData.OpenFilePath()
 Enumerate(inputString) {
     text := ""
     inputstring := Trim(inputString, " `r`n")

@@ -31,8 +31,44 @@ SetListVars(Text, DoWaitMsg := 0, msgboxText := "Waiting.....") {
 
 DisplayMap(InputObject, LineNumber := "", Padding := 4) {
 	Static Iteration := 0
+	InputObject:=getPropMap(InputObject)
 	SetlistVars(StrReplace(JXON.Dump(InputObject, Padding), "`n", "`r`n"))
 	msgbox "Displaying Map :" (Iteration += 1) " `r`n" LineNumber
+}
+
+getPropMap(Input, validProps := ["Value"], level := 1, cap := 10) {
+	tempMap := Map()
+	if Input is Map
+	{
+		For k, v in Input ; Gives priority to Map's data.
+		{
+			If (isObj := IsObject(v)) && (level < cap)
+				v := getPropMap(v, validProps, level + 1)
+			else if level >= cap && isObj
+				v := Type(v)
+			tempMap.Set(k, v)
+		}
+	}
+	else
+		for prop, v in Input.OwnProps()
+		{
+			If (isObj := IsObject(v)) && (level < cap)
+				v := getPropMap(v, validProps, level + 1)
+			else if (level >= cap && isObj)
+				v := Type(v)
+			if (validProps = "All")
+				tempMap.Set(prop, v)
+			Else
+				for validName in validProps
+					if (prop = validName)
+					{
+						if validProps.Length = 1
+							tempMap := v
+						else
+							tempMap.Set(prop, v)
+					}
+		}
+	return tempMap
 }
 
 Class UDF {
