@@ -45,7 +45,6 @@ Class persistentData extends thisFile {
 
             if !IsSet(key)
                 return this._data
-            if key = "ModsPath"
             if !this._data.has(key)
                 this.data[key] := ""
             if !this._data[key].HasProp(prop)
