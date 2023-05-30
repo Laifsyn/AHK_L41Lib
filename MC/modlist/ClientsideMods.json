@@ -1,0 +1,16 @@
+{
+  "clientMods": [
+    "bsvsb",
+    "dynamic-fps",
+    "entityculling-fabric",
+    "InventoryProfilesNext-fabric",
+    "memoryleakfix-fabric",
+    "modmenu",
+    "MouseTweaks-fabric-mc",
+    "reeses_sodium_options",
+    "sodium-extra",
+    "sodium-fabric-mc",
+    "sodium-shadowy-path-blocks",
+    "WorldEditCUI"
+  ]
+}
