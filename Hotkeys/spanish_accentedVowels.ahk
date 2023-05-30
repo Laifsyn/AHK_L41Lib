@@ -20,3 +20,15 @@ Create_es_accentVowels(modifiers := "!", options := "On") {
         Hotkey(modifiers vowelKey, Closure.Bind(IMap), options)
     }
 }
+^r:: reload
+#SuspendExempt true
+!s:: {
+    doSuspend := 1
+    While GetKeyState("s", "P")
+    {
+        if GetKeyState("a", "P") & doSuspend
+            Suspend(), doSuspend := 0
+        else if !GetKeyState("a", "P")
+            doSuspend := 1
+    }
+}
