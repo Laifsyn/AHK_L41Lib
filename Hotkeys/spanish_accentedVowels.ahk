@@ -1,5 +1,15 @@
 ﻿#Requires AutoHotkey v2.0
 
+/*
+How to use as it is:
+To get the accented vowel press:
+Alt + Shift + {vowel or n} 
+Alt + {vowel or n}
+
+To Suspend Hotkeys entries:
+Hold Alt and s, and while keeping hold of alt + s, press a to toggle suspend state.
+*/
+
 Create_es_accentVowels()
 Create_es_accentVowels("!+")
 
@@ -24,7 +34,7 @@ Create_es_accentVowels(modifiers := "!", options := "On") {
 #SuspendExempt true
 !s:: {
     doSuspend := 1
-    While GetKeyState("s", "P")
+    While GetKeyState("s", "P") & GetKeyState("Alt", "P")
     {
         if GetKeyState("a", "P") & doSuspend
             Suspend(), doSuspend := 0
