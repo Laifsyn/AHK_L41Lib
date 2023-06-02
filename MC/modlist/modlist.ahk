@@ -58,8 +58,7 @@ ReadModLists() {
         temp .= v "`r`n"
     if temp != ""
         temp := Sort(temp)
-    text := Trim(text temp, "`r`n")
-    text := Head "`r`n" text
+    text := Head "`r`n" text temp
     path := storedData.data["modlistPath"]
     while 1
         if !FileExist(path)
@@ -72,7 +71,7 @@ ReadModLists() {
 
     SetListVars(path "\modlist.list`r`n" Enumerate(text))
     file := FileOpen(path "\modlist.list", 0x1, A_FileEncoding)
-    file.Write(Format("{2}", FormatTime(A_Now, "yyyy/MM/dd hh:mm"), text))
+    file.Write(Format("{1}`r`n{2}", "https://github.com/Laifsyn/Laifsyn_2023I.Practices/blob/8832c3c55b31df0a55a27ec65f58f7fec6911a2f/Ocios/config.zip", text))
     file.Length := file.Pos
 }
 ^r:: Reload
