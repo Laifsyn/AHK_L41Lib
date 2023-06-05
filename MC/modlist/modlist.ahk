@@ -21,10 +21,10 @@ exit
 
 ReadModLists() {
     global storedData
-    other := []
+    A_nonJars := [], A_nonJars_detailed := []
     max := 0
     maxSize := 0
-    getSize := () => A_LoopFileSizeKB < 10000 ? A_LoopFileSizeKB "KB": Round(A_LoopFileSizeMB + Mod(A_LoopFileSizeKB,1000)/1000,2 ) "MB"
+    getSize := () => A_LoopFileSizeKB < 10000 ? A_LoopFileSizeKB "KB" : Round(A_LoopFileSizeMB + Mod(A_LoopFileSizeKB, 1000) / 1000, 2) "MB"
     loop files storedData.data["ModsPath"] "\*"
     {
         size := getSize()
@@ -37,6 +37,7 @@ ReadModLists() {
     col1 := "ModName", col2 := "Size", col3 := "lastModified"
     Head := col1 stringJoin(" ", max - StrLen(col1) + 2) col2 stringJoin(" ", maxSize - StrLen(col2) + 4) col3
     Text := ""
+    detailedText := ""
     loop files storedData.data["ModsPath"] "\*"
     {
         size := getSize()
@@ -47,22 +48,32 @@ ReadModLists() {
             name := name "." ext
         extraData := stringJoin(" ", max - StrLen(name) + 1) extraData
         if ext = "jar"
-            text .= name extraData "`r`n"
+            ;text .= name extraData "`r`n"
+            text .= name "`r`n", detailedText .= name extraData "`r`n"
         else
-            other.push(Format("{}`r`n", name extraData))
+            A_nonJars.push(Format("{}`r`n", name)), A_nonJars_detailed.Push(Format("{}`r`n", name))
     }
-    text := Trim(text, "`r`n")
-    text := Sort(text)
-    temp := ""
-    for v in other
-        temp .= v "`r`n"
-    if temp != ""
-        temp := Sort(temp)
-    text := Head "`r`n" text temp
+    text := Trim(text, "`r`n"), text := Sort(text)
+    detailedText := Sort(detailedText), detailedText := Trim(detailedText, "`r`n")
+    nonJars := ""
+    nonJarsDetailed := ""
+    for v in A_nonJars
+        nonJars .= v "`r`n"
+    if nonJars != ""
+        nonJars := "`r`n" trim(Sort(nonJars), "`r`n")
+
+    for v in A_nonJars_detailed
+        nonJarsDetailed .= v "`r`n"
+    if nonJarsDetailed != ""
+        nonJarsDetailed := "`r`n" trim(Sort(nonJarsDetailed), "`r`n")
+    ; text := Head "`r`n" text temp
+    text := text nonJars
+
+    detail := Head "`r`n" detailedText nonJars
     path := storedData.data["modlistPath"]
     while 1
         if !FileExist(path)
-            path := InputBox("Input the path where to store the modlist",,,A_ScriptDir "\modlist.list").value
+            path := InputBox("Input the path where to store the modlist", , , A_ScriptDir "\modlist.list").value
         else
         {
             storedData.data["modlistPath"] := path, storedData.Dump()
@@ -71,12 +82,17 @@ ReadModLists() {
 
     SetListVars(path "\modlist.list`r`n" Enumerate(text))
     file := FileOpen(path "\modlist.list", 0x1, A_FileEncoding)
-    file.Write(Format("{1}`r`n{2}", "https://github.com/Laifsyn/Laifsyn_2023I.Practices/blob/8832c3c55b31df0a55a27ec65f58f7fec6911a2f/Ocios/config.zip", text))
+    file.Write(text:=Format("//{1}`r`n{2}`r`n`r`n{3}`r`n", "https://github.com/Laifsyn/Laifsyn_2023I.Practices/blob/8832c3c55b31df0a55a27ec65f58f7fec6911a2f/Ocios/config.zip", text, detail))
+    file.Length := file.Pos
+    
+    file := FileOpen(storedData.data["ModsPath"] "\modlist.list", 0x1, A_FileEncoding)
+    file.Write(text)
     file.Length := file.Pos
 }
 ^r:: Reload
 ^!1:: ReadModLists()
 !^esc:: storedData.OpenFilePath()
+!+m::run A_ScriptDir
 Enumerate(inputString) {
     text := ""
     inputstring := Trim(inputString, " `r`n")

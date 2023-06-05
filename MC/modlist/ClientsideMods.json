@@ -11,6 +11,8 @@
     "sodium-extra",
     "sodium-fabric-mc",
     "sodium-shadowy-path-blocks",
-    "WorldEditCUI"
+    "WorldEditCUI",
+    "colorfulhearts-fabric",
+    "clienttweaks-fabric"
   ]
 }
