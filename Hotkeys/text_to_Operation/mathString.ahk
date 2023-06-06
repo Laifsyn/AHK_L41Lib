@@ -36,25 +36,24 @@ Class mathString extends Object {
     }
 
     getAndEvaluate(inputData?) {
-        this.__getClipboard(IsSet(inputData) ? inputData : unset)
+        if !IsSet(inputData)
+            this.__getClipboard()
+        else
+            this.toEvaluate := inputData
         return this.evaluated
     }
     Insert() {
         static lastInsert := [], insertLastIndex := () => lastInsert.Length
-        lastInsert.Push(InputBox("Insert expression", , , insertLastIndex()?lastInsert[insertLastIndex()]:"").Value)
+        lastInsert.Push(InputBox("Insert expression", , , insertLastIndex() ? lastInsert[insertLastIndex()] : "").Value)
         this.getAndEvaluate(lastInsert[insertLastIndex()])
         Sleep(200)
         SendInput(this.evaluated)
     }
-    __getClipboard(inputData?) {
-        if IsSet(inputData)
-        {
-            this.toEvaluate := inputData
-            return
-        }
-        this.__stashClipboard()
+    __getClipboard(attemptsLimit := 5, stash_unStash := true) {
+        if stash_unStash
+            this.__stashClipboard()
         While 1 {
-            if A_index > 5
+            if A_index > attemptsLimit
             {
                 this.__unStash()
                 throw ValueError("Couldn't get anything from the clipboard!")
@@ -63,7 +62,9 @@ Class mathString extends Object {
             if ClipWait(1, 1)
                 break
         }
-        this.toEvaluate := A_Clipboard, this.__unStash()
+        this.toEvaluate := A_Clipboard
+        if stash_unStash
+            this.__unStash()
         return this
     }
 
@@ -81,6 +82,8 @@ Class mathString extends Object {
         return this
     }
     __unStash() {
+        if !this.isStashed
+            throw Error("There's nothing to un-stash?")
         A_Clipboard := this.stashedClipboard, this.stashedClipboard := ""
         this.isStashed := 0
         return this
