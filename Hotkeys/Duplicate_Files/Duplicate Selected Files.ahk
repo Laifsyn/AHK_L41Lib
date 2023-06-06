@@ -28,6 +28,8 @@ class DuplicateFile {
                     destPath := Format(_path "\{}.{}", _name iteratedName(A_Index + offset), _ext)
                     if !FileExist(destPath)
                         break
+                    if A_Index > 64
+                        throw ValueError("I'm freaking out due to how much copies your're attempting to do!", , A_Index " copies")
                 }
                 ; MsgBox destPath
                 ; text .= Format("{}`r`n`r`n", destPath)
