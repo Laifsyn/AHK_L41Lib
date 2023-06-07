@@ -95,7 +95,7 @@ Class mathString extends Object {
             formatting := "mm 'minutes' ss 'seconds'"
         else
             formatting := "ss 'seconds'"
-        return FormatTime(DateAdd("2000101", seconds, "s"), formatting)
+        return FormatTime(DateAdd("20000101", seconds, "s"), formatting)
     }
     eval() => eval(this.toEvaluate)
 }
