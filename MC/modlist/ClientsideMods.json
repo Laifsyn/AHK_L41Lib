@@ -13,6 +13,8 @@
     "sodium-shadowy-path-blocks",
     "WorldEditCUI",
     "colorfulhearts-fabric",
-    "clienttweaks-fabric"
+    "clienttweaks-fabric",
+    "can-i-mine-this-block",
+    "light-overlay"
   ]
 }

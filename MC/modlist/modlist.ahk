@@ -41,7 +41,8 @@ ReadModLists() {
     loop files storedData.data["ModsPath"] "\*"
     {
         size := getSize()
-        extraData := Format(" [{}]{}{}hrs.", size, stringJoin(" ", maxSize - StrLen(size) + 2), FormatTime(A_LoopFileTimeModified, "MMMM dd hh:mm"))
+        ; extraData := Format(" [{}]{}{}hrs.", size, stringJoin(" ", maxSize - StrLen(size) + 2), FormatTime(A_LoopFileTimeModified, "MMMM dd hh:mm"))
+        extraData := Format(" [{}]{}{} `t {}", size, stringJoin(" ", maxSize - StrLen(size) + 2), FormatTime(A_LoopFileTimeModified, "yyyy-MM-dd hh:mm:ss"), FormatTime(A_LoopFileTimeCreated, "yyyy-MM-dd hh:mm:ss"))
 
         SplitPath(A_LoopFileName, , , &ext, &name)
         if ext != "jar"
