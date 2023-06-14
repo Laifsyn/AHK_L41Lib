@@ -1,6 +1,7 @@
 ﻿#Requires AutoHotkey v2.0
 SetWorkingDir(A_ScriptDir)
 #include <UDF>
+#include "%A_ScriptDir%\ModMatcher.ahk"
 G := myGlobal()
 storedData := C_storedData()
 last := storedData.data.Has("ModsPath") ? storedData.data["ModsPath"] : ""
@@ -9,7 +10,10 @@ while 1 {
     if obj.result = "cancel"
         break
     if !FileExist(last := obj.value)
+    {
+        MsgBox "Path doesn't exists : `r`n" last
         continue
+    }
     if (Obj.value = storedData.data["ModsPath"])
         break
     storedData.data["ModsPath"] := obj.value
@@ -19,9 +23,13 @@ while 1 {
 }
 exit
 
+
+
+
 ReadModLists() {
     global storedData
     A_nonJars := [], A_nonJars_detailed := []
+    static IncludeList := ["jar", "disabled"]
     max := 0
     maxSize := 0
     getSize := () => A_LoopFileSizeKB < 10000 ? A_LoopFileSizeKB "KB" : Round(A_LoopFileSizeMB + Mod(A_LoopFileSizeKB, 1000) / 1000, 2) "MB"
@@ -29,6 +37,8 @@ ReadModLists() {
     {
         size := getSize()
         SplitPath(A_LoopFileName, , , &ext, &name)
+        if !isInList(ext, IncludeList)
+            continue
         if ext != "jar"
             name := name "." ext
         Max := StrLen(name) < max ? Max : StrLen(name)
@@ -45,6 +55,8 @@ ReadModLists() {
         extraData := Format(" [{}]{}{} `t {}", size, stringJoin(" ", maxSize - StrLen(size) + 2), FormatTime(A_LoopFileTimeModified, "yyyy-MM-dd hh:mm:ss"), FormatTime(A_LoopFileTimeCreated, "yyyy-MM-dd hh:mm:ss"))
 
         SplitPath(A_LoopFileName, , , &ext, &name)
+        if !isInList(ext, IncludeList)
+            continue
         if ext != "jar"
             name := name "." ext
         extraData := stringJoin(" ", max - StrLen(name) + 1) extraData
@@ -83,17 +95,19 @@ ReadModLists() {
 
     SetListVars(path "\modlist.list`r`n" Enumerate(text))
     file := FileOpen(path "\modlist.list", 0x1, A_FileEncoding)
-    file.Write(text:=Format("//{1}`r`n{2}`r`n`r`n{3}`r`n", "https://github.com/Laifsyn/Laifsyn_2023I.Practices/blob/8832c3c55b31df0a55a27ec65f58f7fec6911a2f/Ocios/config.zip", text, detail))
+    file.Write(text := Format("{4}{2}`r`n`r`n{3}`r`n", "https://github.com/Laifsyn/Laifsyn_2023I.Practices/blob/8832c3c55b31df0a55a27ec65f58f7fec6911a2f/Ocios/config.zip`r`n", text, detail, ""))
     file.Length := file.Pos
-    
+
     file := FileOpen(storedData.data["ModsPath"] "\modlist.list", 0x1, A_FileEncoding)
     file.Write(text)
     file.Length := file.Pos
+    if MsgBox("Wanna open the list?", , 0x4) = "yes"
+        run storedData.data["ModsPath"] "\modlist.list"
 }
 ^r:: Reload
 ^!1:: ReadModLists()
 !^esc:: storedData.OpenFilePath()
-!+m::run A_ScriptDir
+!+m:: run A_ScriptDir
 Enumerate(inputString) {
     text := ""
     inputstring := Trim(inputString, " `r`n")

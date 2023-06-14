@@ -1,8 +1,41 @@
 ﻿#Requires AutoHotkey v2.0
 #Include <JXON>
-#Include  <class_persistentData>
+#Include <class_persistentData>
 
 ; Functions
+getInputData(prompt := "Enter your data", options := "", default := "", dataType := "string") {
+	editedPrompt := prompt
+	while 1
+	{
+		IB := InputBox(editedPrompt, , options, default)
+		if IB.result = "cancel"
+			exit
+		if IB.Value = "A_Clipboard"
+			{
+				IB.Value := A_Clipboard
+				editedPrompt:= "You've chosen to get from clipboard"
+				default := IB.Value
+				continue
+			}
+		switch dataType, 0 {
+			case "path": goto Paths
+			case "file":
+Paths:
+				if FileExist(IB.Value)
+					break
+				editedPrompt := Format(prompt "`r`nInvalid File Path!:`r`n    {}", IB.Value)
+				default := IB.value
+				continue
+			default:
+				editedPrompt := prompt
+				if MsgBox(Format("Accept?`r`nYour input is:`r`n{}",IB.value)) != "Yes"
+					continue
+		}
+		break
+	}
+	return IB.value
+}
+
 stringJoin(inputString, Amount) {
 	temp := ""
 	Loop Amount
@@ -31,7 +64,7 @@ SetListVars(Text, DoWaitMsg := 0, msgboxText := "Waiting.....") {
 
 DisplayMap(InputObject, LineNumber := "", Padding := 4) {
 	Static Iteration := 0
-	InputObject:=getPropMap(InputObject)
+	InputObject := getPropMap(InputObject)
 	SetlistVars(StrReplace(JXON.Dump(InputObject, Padding), "`n", "`r`n"))
 	msgbox "Displaying Map :" (Iteration += 1) " `r`n" LineNumber
 }
