@@ -13,6 +13,11 @@ It ignores files that has extension of "list", "zip" or "ahk", aka. ignoreList.
 Parsing stops once it encounter's an empty line.
 
 */
+x:=Array("ab", "cd", "ef", "gh", "H")
+SetListVars(
+    listParse(Extract(x, 2,3))
+)
+msgbox "sad"
 #Include <udf>
 storedData := C_storedData(, false)
 old := [storedData.data["ModsPath"], storedData.data["modlist.list"]]
@@ -94,7 +99,23 @@ crossCheck(modsPath := storedData.data["ModsPath"]) {
     if needsUpdate[2].Length > 0
         text .= Format("[Outdated mods?]`r`n{}`r`n`r`n", listParse(needsUpdate[2], "", false))
 
-    SetListVars(text, 1)
+    SetListVars(text)
+    if needsUpdate[2].Length
+    {
+        Sleep(300)
+        modName := needsUpdate[2].Clone()
+        outdatedMods := modName
+        SplitPath(modName[1], , &modDir)
+        for i, v in modName
+        {
+            SplitPath(v, &fileName)
+            modName[i] := fileName
+        }
+        MsgBox("You seem to have outdated(?) mods in your mod's folder`r`n" (modName.Length < 7 ? listParse(modName) : listParse(Extract(modName,1,5)) "........" modName.Length-5))
+        if SetListVars(Format("[{}] {} mods`r`n{}", modDir, modName.Length, listParse(modName, "", false)), 1, "The listed mods will be removed from your folder? `r`nDo you confirm to delete them?", 0x4) != "yes"
+            return
+        deleteMods(outdatedMods)
+    }
 }
 
 isInList(item, list) {
@@ -116,28 +137,45 @@ listParse(items, header := "`t", enum := true) {
         else
             text .= Format('{1}{3} `r`n', header, stringJoin(' ', maxcol - StrLen(i)) String(i), k)
     }
-
+    
     return text
 }
 
 deleteMods(mods := A_Clipboard) {
-    fails := 0
-    max := 0
-    SetListVars(mods)
+    fails := 0, max := 0
+    if mods is string
+        mods := StrSplit(mods, "`r`n", "`t ")
+    SplitPath(mods[1], , &dir)
+    modsNames := Array().DefineProp("Capacity", { value: mods }).DefineProp("path", { value: dir })
+    for _, v in mods
+    {
+        SplitPath(v, &fileName)
+        modsNames.push(fileName)
+    }
+    SetListVars(listParse(modsNames, "`t", true))
     if MsgBox("These are the mods you're looking to delete. Are you sure?", , 0x4) != "Yes"
         return
-    for _, filePath in StrSplit(mods, "`r`n", " `t")
+
+    failedPaths := Map("failedToDelete", Array(), "unexistentPath", Array())
+    for _, filePath in mods
     {
         if FileExist(filePath)
         {
             try
                 FileDelete(filePath)
             catch as E
-                fails += 1
+                fails += 1, failedPaths["failedToDelete"].Push(filePath "`t-Failed to delete")
         }
         else
-            fails += 1
+            fails += 1, failedPaths["unexistentPath"].Push(filePath)
         max := A_Index
+    }
+
+    if fails
+    {
+        failedToDelete := Format("[Items that failed to delete] {} items`r`n{}", failedPaths["failedToDelete"].Length, listParse(failedPaths["failedToDelete"]))
+        hasNoPath := Format("[Items that has invalid Path name] {} items`r`n{}", failedPaths["unexistentPath"].Length, listParse(failedPaths["unexistentPath"]))
+        SetListVars(Format("Delete Summary:`r`n{}`r`n`r`n{}", failedToDelete, hasNoPath))
     }
     MsgBox(Format("Delete successfully with: {} fails out of {} files", fails, max))
 }

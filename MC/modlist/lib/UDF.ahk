@@ -3,6 +3,18 @@
 #Include <class_persistentData>
 
 ; Functions
+
+Extract(inputArray, index, length := 1) {
+	if !inputArray is Array
+		throw ValueError("Unsopported object. Expects Array, but got: " Type(inputArray))
+	output := Array().DefineProp("Capacity", { Value: length })
+	loop length
+		output.Push(inputArray[A_Index + index - 1])
+	if output.length == 1
+		return output[1]
+	return output
+}
+
 getInputData(prompt := "Enter your data", options := "", default := "", dataType := "string") {
 	editedPrompt := prompt
 	while 1
@@ -11,12 +23,12 @@ getInputData(prompt := "Enter your data", options := "", default := "", dataType
 		if IB.result = "cancel"
 			exit
 		if IB.Value = "A_Clipboard"
-			{
-				IB.Value := A_Clipboard
-				editedPrompt:= "You've chosen to get from clipboard"
-				default := IB.Value
+		{
+			if SetListVars(IB.Value := A_Clipboard, 1, "You've chosen to get from clipboard. Do you want to proceed?", 0x4) != "yes"
 				continue
-			}
+			default := "A_Clipboard"
+			return A_Clipboard
+		}
 		switch dataType, 0 {
 			case "path": goto Paths
 			case "file":
@@ -28,7 +40,7 @@ Paths:
 				continue
 			default:
 				editedPrompt := prompt
-				if MsgBox(Format("Accept?`r`nYour input is:`r`n{}",IB.value)) != "Yes"
+				if SetListVars(Format("Accept?`r`nYour input is:`r`n{}", IB.value), true) != "Yes"
 					continue
 		}
 		break
@@ -54,12 +66,12 @@ QPC(Counter := "", Decimals := 2) {
 	DllCall("QueryPerformanceCounter", "Int64*", &CounterAfter := 0)
 	return Round((CounterAfter - Counter) / Freq * 1000, Decimals)
 }
-SetListVars(Text, DoWaitMsg := 0, msgboxText := "Waiting.....") {
+SetListVars(Text, DoWaitMsg := 0, msgboxText := "Waiting.....", msgboxOptions := 0x4) {
 	ListVars
 	WinWaitActive "ahk_class AutoHotkey"
 	ControlSetText Text, "Edit1"
 	if DoWaitMsg
-		Msgbox msgboxText
+		return Msgbox(msgboxText, , msgboxOptions)
 }
 
 DisplayMap(InputObject, LineNumber := "", Padding := 4) {
@@ -136,21 +148,5 @@ Class UDF {
 	Class Map Extends Map {
 		CaseSense := "Off"
 		StartUp := A_Now
-	}
-	Static IniRead(Filename, Section := "", Key := "", Default := "", Auto := "") {
-		; Auto is for what value to Write&Return in case the IniRead Target doesn't exists
-		OutputVar := IniRead(Filename, Section, Key, Default)
-		If (!(Auto = "") and OutputVar = Default)
-		{
-			this.IniWrite(Auto, Filename, Section, Key, True)
-			return Auto
-		}
-		return OutputVar
-	}
-	Static IniWrite(Input, Filename, Section := "", Key := "", AutoCreate := False) {
-		If (!(FileExist(Filename)) and AutoCreate)
-			DirCreate RegExReplace(Filename, "[^\\]+$", "") ; This is in case you have something like "C:\Path\Path2\SomeFile.ini" -> "C:\Path\Path2\"
-		IniWrite Input, Filename, Section, Key
-		return A_LastError ;I honestly don't know what this does. So I'm leaving this just in case.
 	}
 }
