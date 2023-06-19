@@ -76,7 +76,8 @@ SetListVars(Text, DoWaitMsg := 0, msgboxText := "Waiting.....", msgboxOptions :=
 
 DisplayMap(InputObject, LineNumber := "", Padding := 4) {
 	Static Iteration := 0
-	InputObject := getPropMap(InputObject)
+	if InputObject is Map
+		InputObject := getPropMap(InputObject)
 	SetlistVars(StrReplace(JXON.Dump(InputObject, Padding), "`n", "`r`n"))
 	msgbox "Displaying Map :" (Iteration += 1) " `r`n" LineNumber
 }

@@ -13,11 +13,6 @@ It ignores files that has extension of "list", "zip" or "ahk", aka. ignoreList.
 Parsing stops once it encounter's an empty line.
 
 */
-x:=Array("ab", "cd", "ef", "gh", "H")
-SetListVars(
-    listParse(Extract(x, 2,3))
-)
-msgbox "sad"
 #Include <udf>
 storedData := C_storedData(, false)
 old := [storedData.data["ModsPath"], storedData.data["modlist.list"]]
@@ -104,7 +99,7 @@ crossCheck(modsPath := storedData.data["ModsPath"]) {
     {
         Sleep(300)
         modName := needsUpdate[2].Clone()
-        outdatedMods := modName
+        outdatedMods := modName.Clone()
         SplitPath(modName[1], , &modDir)
         for i, v in modName
         {
@@ -146,7 +141,7 @@ deleteMods(mods := A_Clipboard) {
     if mods is string
         mods := StrSplit(mods, "`r`n", "`t ")
     SplitPath(mods[1], , &dir)
-    modsNames := Array().DefineProp("Capacity", { value: mods }).DefineProp("path", { value: dir })
+    modsNames := Array().DefineProp("Capacity", { value: mods.Length }).DefineProp("path", { value: dir })
     for _, v in mods
     {
         SplitPath(v, &fileName)

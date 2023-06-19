@@ -3,27 +3,10 @@ SetWorkingDir(A_ScriptDir)
 #include <UDF>
 #include "%A_ScriptDir%\ModMatcher.ahk"
 G := myGlobal()
-storedData := C_storedData()
-last := storedData.data.Has("ModsPath") ? storedData.data["ModsPath"] : ""
-while 1 {
-    obj := InputBox("Insert Minecraft mods File Path.", G.name, , last)
-    if obj.result = "cancel"
-        break
-    if !FileExist(last := obj.value)
-    {
-        MsgBox "Path doesn't exists : `r`n" last
-        continue
-    }
-    if (Obj.value = storedData.data["ModsPath"])
-        break
-    storedData.data["ModsPath"] := obj.value
-    storedData.Dump()
-    MsgBox(storedData.data["ModsPath"])
-    break
-}
+if !IsSet(storedData)
+    throw ValueError("storedData is not set!")
+
 exit
-
-
 
 
 ReadModLists() {
@@ -98,11 +81,11 @@ ReadModLists() {
     file.Write(text := Format("{4}{2}`r`n`r`n{3}`r`n", "https://github.com/Laifsyn/Laifsyn_2023I.Practices/blob/8832c3c55b31df0a55a27ec65f58f7fec6911a2f/Ocios/config.zip`r`n", text, detail, ""))
     file.Length := file.Pos
 
-    file := FileOpen(storedData.data["ModsPath"] "\modlist.list", 0x1, A_FileEncoding)
+    file := FileOpen(listPath := storedData.data["modlist.list"], 0x1, A_FileEncoding)
     file.Write(text)
     file.Length := file.Pos
-    if MsgBox("Wanna open the list?", , 0x4) = "yes"
-        run storedData.data["ModsPath"] "\modlist.list"
+    if MsgBox("Wanna open the list?`r`n" listPath, , 0x4) = "yes"
+        run listPath
 }
 ^r:: Reload
 ^!1:: ReadModLists()
