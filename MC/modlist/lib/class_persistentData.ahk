@@ -70,8 +70,8 @@ Class persistentData extends thisFile {
             this.Load()
             return
         }
-        for k,v in map
-            this.data[k]:=v
+        for k, v in map
+            this.data[k] := v
     }
     __Read() => FileRead(this.store["path"] "\" this.store["fileName"], this.encoding)
     __isCreated(path, shouldCreate := 1) {
@@ -92,6 +92,7 @@ Class persistentData extends thisFile {
         map := this.__MergeMap(map, this.data)
         map.set("timestamp", A_Now)
         fileObj.Write(JXON.Dump(map, 2))
+        fileObj.Length := fileObj.Pos
         fileobj.Close()
     }
     __MergeMap(what, withWhat) {
