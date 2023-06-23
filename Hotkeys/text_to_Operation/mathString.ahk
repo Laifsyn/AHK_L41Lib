@@ -2,9 +2,10 @@
 #Include <eval> ; Converts String expression as AHK expressions. ie. "!!5" => 1
 myMathString := mathString()
 !+1:: SendInput(myMathString.evaluated)
-!+2:: SendInput(myMathString.getAndEvaluate(A_Clipboard))
+!2:: SendInput(myMathString.getAndEvaluate(A_Clipboard))
 !1:: SendInput(myMathString.getAndEvaluate())
 !3:: msgbox(Format("Result: {}, from Clipboard `r`n{}", myMathString.getAndEvaluate(), myMathString.toEvaluate))
+!9:: SendInput(myMathString.arrayGetAndEvaluate(A_Clipboard))
 !0:: myMathString.Insert()
 Class mathString extends Object {
     ;
@@ -16,6 +17,8 @@ Class mathString extends Object {
     _evaluated := 0
     evaluated {
         get {
+            if !eval(this.toEvaluate, true)
+                throw ValueError("Not recognized expression!", Type(this), Chr(34) this.toEvaluate Chr(34))
             if this.isNewValue
                 this._evaluated := eval(this.toEvaluate), this.isNewValue := false
             return this._evaluated
@@ -25,14 +28,36 @@ Class mathString extends Object {
     _toEvaluate := ""
     toEvaluate {
         set {
-            if !eval(Value, true)
-                throw ValueError("Not recognized expression!", Type(this), Value)
             this.isNewValue := 1
             this._toEvaluate := Value
         }
-        get {
-            return this._toEvaluate
+        get => this._toEvaluate
+    }
+
+    arrayGetAndEvaluate(inputData?, delimiter := ",", omitChars := " ,", stringFormat?) {
+
+        if !IsSet(inputData)
+            this.__getClipboard(), inputData := this.toEvaluate
+        text := ""
+        if RegExMatch(inputData,replaceNeedle:="\{(.*)\}", &strFormat)
+            inputData:=RegExReplace(inputData,replaceNeedle,""), stringFormat:=strFormat[1]
+        inputData := StrSplit(inputData, delimiter, omitChars)
+        for index, expression in inputData
+        {
+            this.toEvaluate := expression
+            inputData[index] := this.evaluated
         }
+        if IsSet(stringFormat)
+            rv := Format(stringFormat, inputData*)
+        else
+        {
+            rv := ""
+            for v in inputData
+                rv .= v delimiter
+            rv := Rtrim(rv, delimiter)
+        }
+        A_Clipboard := rv
+        return rv
     }
 
     getAndEvaluate(inputData?) {
@@ -42,11 +67,15 @@ Class mathString extends Object {
             this.toEvaluate := inputData
         return this.evaluated
     }
-    Insert() {
+    Insert(data?) {
         static lastInsert := [], insertLastIndex := () => lastInsert.Length
-        lastInsert.Push(InputBox("Insert expression", , , insertLastIndex() ? lastInsert[insertLastIndex()] : "").Value)
+        if IsSet(data)
+            lastInsert.Push(data)
+        else
+            lastInsert.Push(InputBox("Insert expression", , , insertLastIndex() ? lastInsert[insertLastIndex()] : "").Value)
         this.getAndEvaluate(lastInsert[insertLastIndex()])
         Sleep(200)
+        A_Clipboard := this.evaluated
         SendInput(this.evaluated)
     }
     __getClipboard(attemptsLimit := 5, stash_unStash := true) {
